@@ -1,0 +1,17 @@
+<?php
+
+namespace DummyNamespace;
+
+use AppNamespace\Contracts\DownloaderService;
+
+class DummyClass implements DownloaderService
+{
+
+    /**
+     * @param string $url
+     */
+    public function url(string $url)
+    {
+        //
+    }
+}

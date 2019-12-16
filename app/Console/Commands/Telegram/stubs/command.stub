@@ -1,0 +1,31 @@
+<?php
+
+namespace DummyNamespace;
+
+use Telegram\Bot\Actions;
+use Telegram\Bot\Commands\Command;
+
+class DummyClass extends Command
+{
+    /**
+     * The name the command.
+     *
+     * @var string
+     */
+    protected $name = 'dummy:command';
+
+    /**
+     * The command description.
+     *
+     * @var string
+     */
+    protected $description = 'Command description';
+
+    /**
+     * @inheritdoc
+     */
+    public function handle($arguments)
+    {
+        // TODO
+    }
+}

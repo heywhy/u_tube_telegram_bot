@@ -1,5 +1,8 @@
 <?php
 
+use App\Support\App;
+use Illuminate\Support\Facades\Route;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -11,6 +14,6 @@
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', fn() => view('welcome'));
+
+Route::post('/webhook', fn() => App::process());
