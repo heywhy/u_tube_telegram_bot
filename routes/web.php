@@ -1,6 +1,5 @@
 <?php
 
-use App\Support\App;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -14,10 +13,6 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function() {
-    return view('welcome');
-});
+Route::get('/', 'HomeController@index');
 
-Route::post('/webhook', function() {
-    return App::process();
-});
+Route::post('/webhook', 'WebhookController');
