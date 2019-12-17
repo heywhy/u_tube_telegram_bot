@@ -110,7 +110,7 @@ class YoutubeSearchCommand extends Command
         $keyboard = [];
         if (Arr::has($data, 'previousToken') && $data['previousToken'] != null)
             array_push($keyboard, NavigationActions::Previous);
-        $keyboard = [...$keyboard, NavigationActions::Cancel];
+        $keyboard = array_merge($keyboard, [NavigationActions::Cancel]);
         if (Arr::has($data, 'nextToken') && $data['nextToken'] != null)
             array_push($keyboard, NavigationActions::Next);
 
