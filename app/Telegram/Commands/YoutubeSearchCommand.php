@@ -2,13 +2,23 @@
 
 namespace App\Telegram\Commands;
 
+use App\Enums\NavigationActions;
+use App\Enums\YoutubeSearchStates;
+use App\Support\CommandHelperTrait;
 use Google_Service_YouTube;
 use Google_Service_YouTube_SearchListResponse;
+use Google_Service_YouTube_SearchResult;
+use Illuminate\Cache\Repository;
+use Illuminate\Support\Arr;
 use Telegram\Bot\Actions;
 use Telegram\Bot\Commands\Command;
+use Telegram\Bot\Keyboard\Keyboard;
 
 class YoutubeSearchCommand extends Command
 {
+
+    use CommandHelperTrait;
+
     /**
      * The name the command.
      *
@@ -21,12 +31,23 @@ class YoutubeSearchCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Command description';
+    protected $description = 'Searches youtube for videos matching the given name';
 
+    /**
+     *
+     */
     protected Google_Service_YouTube $youtube;
 
-    public function __construct(Google_Service_YouTube $youtube_service)
-    {
+    /**
+     *
+     */
+    protected Repository $cacheRepo;
+
+    public function __construct(
+        Repository $cacheRepo,
+        Google_Service_YouTube $youtube_service
+    ){
+        $this->cacheRepo = $cacheRepo;
         $this->youtube = $youtube_service;
     }
 
@@ -39,11 +60,13 @@ class YoutubeSearchCommand extends Command
             'action' => Actions::TYPING
         ]);
 
-        $results = $this->youtube->search
-            ->listSearch('id,snippet', ['q' => $this->getArguments(),]);
+        $results = $this->youtube->search->listSearch('id,snippet', [
+            'q' => $this->getArguments(),
+            'pageToken' => $this->getPageToken()
+        ]);
         $limit = count($results->getItems());
 
-        logger()->info('count', [count($results)]);
+        $this->setState($this->getArguments(), $results);
 
         foreach ($results->getItems() as $key => $item) {
             $snippet = $item->snippet;
@@ -51,31 +74,71 @@ class YoutubeSearchCommand extends Command
             $text = <<<E
             Title: <b>{$snippet->title}</b>
 
-            Description: {$snippet->description}
-
-            <a href="https://youtube.com/watch?v={$item->id->videoId}">Watch</a>
+            <a href="{$this->watchUrl($item)}">Watch</a>
             E;
-
-            $replyKeyboard = ((int)$key + 1) >= $limit
-                ? $this->getPaginationKeyboard($results) : null;
 
             $this->replyWithMessage([
                 'text' => $text,
                 'parse_mode' => 'HTML',
-                'reply_markup' => $replyKeyboard,
+                'reply_markup' => $this->watchButton($item),
             ]);
-            // $this->replyWithPhoto([
-            //     'photo' => $snippet->thumbnails->default->url
-            // ]);
         }
+
+        $this->replyWithMessage([
+            'text' => 'Done',
+            'reply_markup' => $this->getPaginationKeyboard($results)
+        ]);
     }
 
-    protected function getPaginationKeyboard(Google_Service_YouTube_SearchListResponse $response)
+    protected function watchUrl(Google_Service_YouTube_SearchResult $item): string
     {
-        return $this->telegram->replyKeyboardMarkup([
-            'keyboard' => [['Previous', 'Next'],],
+        return "https://youtube.com/watch?v={$item->id->videoId}";
+    }
+
+    protected function watchButton(Google_Service_YouTube_SearchResult $item)
+    {
+        return Keyboard::make([
+            'inline_keyboard' => [[
+                ['text' => 'Watch', 'url' => $this->watchUrl($item)]
+            ]]
+        ]);
+    }
+
+    protected function getPaginationKeyboard()
+    {
+        $data = $this->getUserData();
+        $keyboard = [];
+        if (Arr::has($data, 'previousToken') && $data['previousToken'] != null)
+            array_push($keyboard, NavigationActions::Previous);
+        $keyboard = [...$keyboard, NavigationActions::Cancel];
+        if (Arr::has($data, 'nextToken') && $data['nextToken'] != null)
+            array_push($keyboard, NavigationActions::Next);
+
+        // $this->telegram->replyKeyboardHide()
+
+        return Keyboard::make([
+            'keyboard' => [$keyboard],
             'resize_keyboard' => true,
             'one_time_keyboard' => true,
         ]);
+    }
+
+    protected function setState(string $q, Google_Service_YouTube_SearchListResponse $response)
+    {
+        $this->cacheRepo->set($this->getUserKey(), [
+            'query' => $q,
+            'nextToken' => $response->getNextPageToken(),
+            'previousToken' => $response->getPrevPageToken(),
+            'state' => YoutubeSearchStates::Navigation,
+        ]);
+    }
+
+    protected function getPageToken(): ?string
+    {
+        $data = $this->getUserData();
+        if ($data == null || $data['state'] != YoutubeSearchStates::Navigation) {
+            return null;
+        }
+        return Arr::has($data, 'pageToken') ? $data['pageToken'] : null;
     }
 }

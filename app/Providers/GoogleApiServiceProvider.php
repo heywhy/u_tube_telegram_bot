@@ -3,9 +3,6 @@
 namespace App\Providers;
 
 use Google_Client;
-use Google_Service;
-use Google_Service_YouTube;
-use Illuminate\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 
 class GoogleApiServiceProvider extends ServiceProvider
@@ -21,11 +18,11 @@ class GoogleApiServiceProvider extends ServiceProvider
             $client = new Google_Client();
 
             $client->setDeveloperKey(env('YOUTUBE_API_KEY'));
+            $client->useApplicationDefaultCredentials();
+            $client->setScopes(['https://www.googleapis.com/auth/youtube']);
 
             return $client;
         });
-
-        // $this->app->singleton(Google_Service_YouTube::class, fn (Application $app) => new Google_Service_YouTube($app->make(Google_Client::class)));
     }
 
     /**

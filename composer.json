@@ -9,6 +9,7 @@
     "license": "MIT",
     "require": {
         "php": "^7.2",
+        "bensampo/laravel-enum": "^1.28",
         "fideloper/proxy": "^4.0",
         "google/apiclient": "^2.4",
         "irazasyed/telegram-bot-sdk": "^3.0",

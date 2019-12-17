@@ -44,8 +44,8 @@ return [
             'token' => env('TELEGRAM_BOT_TOKEN', 'YOUR-BOT-TOKEN'),
             'commands' => [
                 App\Telegram\Commands\StartCommand::class,
-                App\Telegram\Commands\DownloadCommand::class,
-                App\Telegram\Commands\KeyboardCommand::class,
+                // App\Telegram\Commands\DownloadCommand::class,
+                // App\Telegram\Commands\KeyboardCommand::class,
                 App\Telegram\Commands\YoutubeSearchCommand::class,
 //                Acme\Project\Commands\MyTelegramBot\BotCommand::class,
             ],
