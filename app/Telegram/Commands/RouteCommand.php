@@ -31,14 +31,14 @@ class RouteCommand extends Command
     protected $description = 'Command description';
 
     /**
-     *
+     * @var Repository
      */
-    protected Repository $cacheRepo;
+    protected $cacheRepo;
 
     /**
-     *
+     * @var Google_Service_YouTube
      */
-    protected Google_Service_YouTube $youtube;
+    protected $youtube;
 
 
     public function __construct(

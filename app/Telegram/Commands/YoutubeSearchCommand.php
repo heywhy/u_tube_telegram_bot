@@ -34,14 +34,14 @@ class YoutubeSearchCommand extends Command
     protected $description = 'Searches youtube for videos matching the given name';
 
     /**
-     *
+     * @var Repository
      */
-    protected Google_Service_YouTube $youtube;
+    protected $cacheRepo;
 
     /**
-     *
+     * @var Google_Service_YouTube
      */
-    protected Repository $cacheRepo;
+    protected $youtube;
 
     public function __construct(
         Repository $cacheRepo,

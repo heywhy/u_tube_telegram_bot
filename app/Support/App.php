@@ -22,7 +22,10 @@ class App
         $update = Telegram::commandsHandler($process);
 
         if (is_array($update)) {
-            array_map(fn($data) => static::routeUpdate($data), $update);
+            $mapper = function ($data) {
+                return static::routeUpdate($data);
+            };
+            array_map($mapper, $update);
         } else {
             static::routeUpdate($update);
         }
