@@ -26,6 +26,17 @@ class AppServiceProvider extends ServiceProvider
     {
         if (!$this->app->environment('local')) {
             Telegram::setWebHook(['url' => env('APP_URL') . '/webhook']);
+            $this->getGoogleCredentials();
+        }
+    }
+
+    protected function getGoogleCredentials()
+    {
+        $url = env('GOOGLE_CRED_URL');
+        $file = base_path('service-accounts.json');
+        if (!file_exists($file) && $url != null) {
+            $contents = file_get_contents($url);
+            file_put_contents($file, $contents);
         }
     }
 }
