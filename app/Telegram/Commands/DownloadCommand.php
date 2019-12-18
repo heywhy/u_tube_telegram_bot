@@ -91,7 +91,7 @@ class DownloadCommand extends Command
         };
 
         $userData = array_merge($this->getUserData(), [
-            'video_resolutions' => array_map($callback, $resolutions)
+            'video_resolutions' => array_map($callback, Helper::cleanArray($resolutions))
         ]);
 
         $this->setUserState($userData);
