@@ -76,6 +76,12 @@ class DownloadCommand extends Command
     {
         $resolutions = $this->youtube->getResolutions($url);
 
+        if (empty($resolutions)) {
+            return $this->replyWithMessage([
+                'text' => "Video can't be downloaded"
+            ]);
+        }
+
         $this->replyWithMessage([
             'text' => 'Choose resolution/format',
             'reply_markup' => $this->getResolutionsButtons($resolutions),
