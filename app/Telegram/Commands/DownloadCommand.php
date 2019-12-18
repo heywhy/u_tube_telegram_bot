@@ -28,7 +28,7 @@ class DownloadCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Download video';
+    protected $description = 'Download video from the given url';
 
     /**
      * @var YoutubeService
@@ -68,7 +68,7 @@ class DownloadCommand extends Command
                 break;
             default:
                 $this->replyWithMessage([
-                    'text' => 'Unknown video provider e.g. (youtube) url',
+                    'text' => 'Unknown video provider e.g. /download (youtube) url',
                 ]);
         }
         // $this->telegram->replyKeyboardHide();
