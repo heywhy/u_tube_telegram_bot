@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Telegram\AnswerQueryCallbackBus;
 use App\Telegram\Commands\RouteCommand;
 use Telegram\Bot\Api;
 use Telegram\Bot\Laravel\Facades\Telegram;
@@ -40,6 +41,13 @@ class App
      */
     static protected function routeUpdate(Update $update)
     {
+        /** @var Api */
+        $telegram = app(Api::class);
+
+        if (!is_null($update->getCallbackQuery())) {
+            return static::processCallbackQuery($telegram, $update);
+        }
+
         $entities = $update->getMessage() != null
             ? $update->getMessage()->getEntities() : null;
 
@@ -48,8 +56,16 @@ class App
             $router = app(RouteCommand::class);
             $arguments = $update->getMessage()->getText();
 
-            $router->make(app(Api::class), $arguments, $update);
+            $router->make($telegram, $arguments, $update);
         }
+    }
+
+    static protected function processCallbackQuery(Api $telegram, Update $update)
+    {
+        $callbackQuery = $update->getCallbackQuery();
+        $data = $callbackQuery->getData();
+
+        $telegram->getCommandBus()->handler($data, $update);
     }
 
     /**
@@ -58,6 +74,6 @@ class App
      */
     static function getUserKey(Update $update): string
     {
-        return 'user_' . $update->getMessage()->getFrom()->getId();
+        return 'user_' . $update->getChat()->getId();
     }
 }

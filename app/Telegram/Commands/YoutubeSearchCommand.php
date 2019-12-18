@@ -4,11 +4,10 @@ namespace App\Telegram\Commands;
 
 use App\Enums\NavigationActions;
 use App\Enums\YoutubeSearchStates;
+use App\Services\Video\YoutubeService;
 use App\Support\CommandHelperTrait;
-use Google_Service_YouTube;
 use Google_Service_YouTube_SearchListResponse;
 use Google_Service_YouTube_SearchResult;
-use Illuminate\Cache\Repository;
 use Illuminate\Support\Arr;
 use Telegram\Bot\Actions;
 use Telegram\Bot\Commands\Command;
@@ -34,21 +33,16 @@ class YoutubeSearchCommand extends Command
     protected $description = 'Searches youtube for videos matching the given name';
 
     /**
-     * @var Repository
-     */
-    protected $cacheRepo;
-
-    /**
-     * @var Google_Service_YouTube
+     * @var YoutubeService
      */
     protected $youtube;
 
-    public function __construct(
-        Repository $cacheRepo,
-        Google_Service_YouTube $youtube_service
-    ){
-        $this->cacheRepo = $cacheRepo;
-        $this->youtube = $youtube_service;
+    /**
+     * @param  \App\Services\Video\YoutubeService  $youtube
+     */
+    public function __construct(YoutubeService $youtube)
+    {
+        $this->youtube = $youtube;
     }
 
     /**
@@ -60,11 +54,10 @@ class YoutubeSearchCommand extends Command
             'action' => Actions::TYPING
         ]);
 
-        $results = $this->youtube->search->listSearch('id,snippet', [
+        $results = $this->youtube->search([
             'q' => $this->getArguments(),
             'pageToken' => $this->getPageToken()
         ]);
-        $limit = count($results->getItems());
 
         $this->setState($this->getArguments(), $results);
 
@@ -97,9 +90,11 @@ class YoutubeSearchCommand extends Command
 
     protected function watchButton(Google_Service_YouTube_SearchResult $item)
     {
+        $watchUrl = $this->watchUrl($item);
         return Keyboard::make([
             'inline_keyboard' => [[
-                ['text' => 'Watch', 'url' => $this->watchUrl($item)]
+                ['text' => 'Watch', 'url' => $watchUrl],
+                ['text' => 'Download', 'callback_data' => '/download youtube ' . $watchUrl],
             ]]
         ]);
     }
@@ -114,8 +109,6 @@ class YoutubeSearchCommand extends Command
         if (Arr::has($data, 'nextToken') && $data['nextToken'] != null)
             array_push($keyboard, NavigationActions::Next);
 
-        // $this->telegram->replyKeyboardHide()
-
         return Keyboard::make([
             'keyboard' => [$keyboard],
             'resize_keyboard' => true,
@@ -125,7 +118,7 @@ class YoutubeSearchCommand extends Command
 
     protected function setState(string $q, Google_Service_YouTube_SearchListResponse $response)
     {
-        $this->cacheRepo->set($this->getUserKey(), [
+        $this->setUserState([
             'query' => $q,
             'nextToken' => $response->getNextPageToken(),
             'previousToken' => $response->getPrevPageToken(),

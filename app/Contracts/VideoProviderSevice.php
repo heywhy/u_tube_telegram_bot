@@ -2,7 +2,8 @@
 
 namespace App\Contracts;
 
-interface DownloaderService
+interface VideoProviderSevice
 {
+    function search(array $params);
     function download(string $url);
 }

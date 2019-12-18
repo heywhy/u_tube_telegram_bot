@@ -9,6 +9,7 @@
     "license": "MIT",
     "require": {
         "php": "^7.2",
+        "athlon1600/youtube-downloader": "^1.0",
         "bensampo/laravel-enum": "^1.28",
         "fideloper/proxy": "^4.0",
         "google/apiclient": "^2.4",

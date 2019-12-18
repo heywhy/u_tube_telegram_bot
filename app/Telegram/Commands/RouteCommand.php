@@ -5,8 +5,6 @@ namespace App\Telegram\Commands;
 use App\Enums\NavigationActions;
 use App\Enums\YoutubeSearchStates;
 use App\Support\CommandHelperTrait;
-use Google_Service_YouTube;
-use Illuminate\Cache\Repository;
 use Telegram\Bot\Actions;
 use Telegram\Bot\Commands\Command;
 use Telegram\Bot\Keyboard\Keyboard;
@@ -31,25 +29,6 @@ class RouteCommand extends Command
     protected $description = 'Command description';
 
     /**
-     * @var Repository
-     */
-    protected $cacheRepo;
-
-    /**
-     * @var Google_Service_YouTube
-     */
-    protected $youtube;
-
-
-    public function __construct(
-        Repository $cacheRepo,
-        Google_Service_YouTube $youtube_service
-    ){
-        $this->cacheRepo = $cacheRepo;
-        $this->youtube = $youtube_service;
-    }
-
-    /**
      * @inheritdoc
      */
     public function handle($arguments)
@@ -70,7 +49,7 @@ class RouteCommand extends Command
         switch ($data['state']) {
             case YoutubeSearchStates::Navigation:
                 if ($arguments === NavigationActions::Cancel) {
-                    $this->cacheRepo->delete($this->getUserKey());
+                    $this->setUserState(null);
                     $this->replyWithMessage([
                         'text' => 'Search cancelled',
                         'reply_markup' => Keyboard::make(['remove_keyboard' => true,]),
@@ -80,8 +59,8 @@ class RouteCommand extends Command
 
                 $token = $arguments === NavigationActions::Next
                     ? $data['nextToken'] : $data['previousToken'];
-                $this->cacheRepo->set($this->getUserKey(), array_merge($data, ['pageToken' => $token]));
 
+                $this->setUserState(array_merge($data, ['pageToken' => $token]));
                 $this->triggerCommand('youtube_search', $data['query']);
                 break;
         }
