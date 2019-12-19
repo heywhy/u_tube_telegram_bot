@@ -54,14 +54,18 @@ class DownloadCommand extends Command
      */
     public function handle($arguments)
     {
-        if (empty($arguments)) return;
+        $this->replyWithChatAction(['action' => Actions::TYPING]);
+        if (empty($arguments)) {
+            return $this->replyWithMessage([
+                'text' => 'Usage: /download [service](youtube) [url]'
+            ]);
+        }
 
         [$service, $url] = preg_split("/\s/", $arguments, 2);
 
         if (!is_null($this->getCallbackQuery())) {
             $this->answerCallbackQuery(['text' => 'Processing...',]);
         }
-        $this->replyWithChatAction(['action' => Actions::TYPING]);
 
         switch (mb_strtolower($service)) {
             case 'youtube':
