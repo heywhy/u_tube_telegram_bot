@@ -61,6 +61,7 @@ class DownloadCommand extends Command
         if (!is_null($this->getCallbackQuery())) {
             $this->answerCallbackQuery(['text' => 'Processing...',]);
         }
+        $this->replyWithChatAction(['action' => Actions::TYPING]);
 
         switch (mb_strtolower($service)) {
             case 'youtube':
@@ -98,11 +99,9 @@ class DownloadCommand extends Command
             return Arr::only($resolution, ['url', 'format']);
         };
 
-        $userData = array_merge($this->getUserData(), [
+        $this->addUserState([
             'video_resolutions' => array_map($callback, Helper::cleanArray($resolutions))
         ]);
-
-        $this->setUserState($userData);
 
         foreach ($resolutions as $resolution) {
             array_push($buttons, [

@@ -2,11 +2,16 @@
 
 namespace App\Telegram\Commands;
 
+use App\Support\CommandHelperTrait;
 use Telegram\Bot\Actions;
 use Telegram\Bot\Commands\Command;
+use Telegram\Bot\Keyboard\Keyboard;
 
 class StartCommand extends Command
 {
+
+    use CommandHelperTrait;
+
     /**
      * The name the command.
      *
@@ -47,12 +52,14 @@ class StartCommand extends Command
         }
 
         // Reply with the commands list
-        $this->replyWithMessage(['text' => $response]);
+        $this->replyWithMessage(['text' => $response, 'reply_markup' => Keyboard::hide()]);
 
         // Trigger another command dynamically from within this command
         // When you want to chain multiple commands within one or process the request further.
         // The method supports second parameter arguments which you can optionally pass, By default
         // it'll pass the same arguments that are received for this command originally.
         // $this->triggerCommand('subscribe');
+
+        $this->setUserState(null);
     }
 }

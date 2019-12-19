@@ -2,12 +2,10 @@
 
 namespace App\Telegram\Commands;
 
-use App\Enums\NavigationActions;
-use App\Enums\YoutubeSearchStates;
 use App\Support\CommandHelperTrait;
-use Telegram\Bot\Actions;
+use App\Support\CommandRoute;
+use Exception;
 use Telegram\Bot\Commands\Command;
-use Telegram\Bot\Keyboard\Keyboard;
 
 class RouteCommand extends Command
 {
@@ -19,7 +17,7 @@ class RouteCommand extends Command
      *
      * @var string
      */
-    protected $name = 'command:name';
+    protected $name = 'route';
 
     /**
      * The command description.
@@ -42,28 +40,20 @@ class RouteCommand extends Command
         }
     }
 
+    /**
+     * Process the string command.
+     *
+     * @param  mixed  $arguments
+     * @param  mixed  $data
+     */
     protected function process($arguments, $data)
     {
-        $this->replyWithChatAction(['action' => Actions::TYPING]);
-
-        switch ($data['state']) {
-            case YoutubeSearchStates::Navigation:
-                if ($arguments === NavigationActions::Cancel) {
-                    $this->setUserState(null);
-                    $this->replyWithMessage([
-                        'text' => 'Search cancelled',
-                        'reply_markup' => Keyboard::make(['remove_keyboard' => true,]),
-                    ]);
-                    break;
-                }
-
-                $token = $arguments === NavigationActions::Next
-                    ? $data['nextToken'] : $data['previousToken'];
-
-                $this->setUserState(array_merge($data, ['pageToken' => $token]));
-                $this->triggerCommand('youtube_search', $data['query']);
-                break;
+        try {
+            $callback = CommandRoute::fromRoute($data);
+            if ($callback != null) $callback($this, $arguments);
+        } catch (Exception $e) {
+            logger()->error($e);
+            $this->replyWithMessage(['text' => 'Unknown command']);
         }
-        dump(['on routing => ', $arguments, $data]);
     }
 }

@@ -43,7 +43,7 @@ return [
             'username'  => 'test_tube_bot',
             'token' => env('TELEGRAM_BOT_TOKEN', 'YOUR-BOT-TOKEN'),
             'commands' => [
-                App\Telegram\Commands\PullCommand::class,
+                // App\Telegram\Commands\PullCommand::class,
                 App\Telegram\Commands\StartCommand::class,
                 App\Telegram\Commands\DownloadCommand::class,
                 // App\Telegram\Commands\KeyboardCommand::class,

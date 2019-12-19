@@ -28,6 +28,13 @@ trait CommandHelperTrait
         return $storage->set($key, $state);
     }
 
+    protected function addUserState(array $data)
+    {
+        $current = $this->getUserData() ?? [];
+
+        return $this->setUserState(array_merge($current, $data));
+    }
+
     protected function getStorage(): Repository
     {
         return app(Repository::class);

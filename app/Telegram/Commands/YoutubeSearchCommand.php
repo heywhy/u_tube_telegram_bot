@@ -2,16 +2,9 @@
 
 namespace App\Telegram\Commands;
 
-use App\Enums\NavigationActions;
-use App\Enums\YoutubeSearchStates;
-use App\Services\Video\YoutubeService;
 use App\Support\CommandHelperTrait;
-use Google_Service_YouTube_SearchListResponse;
-use Google_Service_YouTube_SearchResult;
-use Illuminate\Support\Arr;
 use Telegram\Bot\Actions;
 use Telegram\Bot\Commands\Command;
-use Telegram\Bot\Keyboard\Keyboard;
 
 class YoutubeSearchCommand extends Command
 {
@@ -30,20 +23,7 @@ class YoutubeSearchCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Searches youtube for videos matching the given name';
-
-    /**
-     * @var YoutubeService
-     */
-    protected $youtube;
-
-    /**
-     * @param  \App\Services\Video\YoutubeService  $youtube
-     */
-    public function __construct(YoutubeService $youtube)
-    {
-        $this->youtube = $youtube;
-    }
+    protected $description = 'Search youtube for videos matching the query';
 
     /**
      * @inheritdoc
@@ -54,84 +34,7 @@ class YoutubeSearchCommand extends Command
             'action' => Actions::TYPING
         ]);
 
-        $results = $this->youtube->search([
-            'q' => $this->getArguments(),
-            'pageToken' => $this->getPageToken()
-        ]);
-
-        $this->setState($this->getArguments(), $results);
-
-        foreach ($results->getItems() as $key => $item) {
-            $snippet = $item->snippet;
-
-            $text = <<<E
-            Title: <b>{$snippet->title}</b>
-
-            <a href="{$this->watchUrl($item)}">Watch</a>
-            E;
-
-            $this->replyWithMessage([
-                'text' => $text,
-                'parse_mode' => 'HTML',
-                'reply_markup' => $this->watchButton($item),
-            ]);
-        }
-
-        $this->replyWithMessage([
-            'text' => 'Done',
-            'reply_markup' => $this->getPaginationKeyboard($results)
-        ]);
-    }
-
-    protected function watchUrl(Google_Service_YouTube_SearchResult $item): string
-    {
-        return "https://youtube.com/watch?v={$item->id->videoId}";
-    }
-
-    protected function watchButton(Google_Service_YouTube_SearchResult $item)
-    {
-        $watchUrl = $this->watchUrl($item);
-        return Keyboard::make([
-            'inline_keyboard' => [[
-                ['text' => 'Watch', 'url' => $watchUrl],
-                ['text' => 'Download', 'callback_data' => '/download youtube ' . $watchUrl],
-            ]]
-        ]);
-    }
-
-    protected function getPaginationKeyboard()
-    {
-        $data = $this->getUserData();
-        $keyboard = [];
-        if (Arr::has($data, 'previousToken') && $data['previousToken'] != null)
-            array_push($keyboard, NavigationActions::Previous);
-        $keyboard = array_merge($keyboard, [NavigationActions::Cancel]);
-        if (Arr::has($data, 'nextToken') && $data['nextToken'] != null)
-            array_push($keyboard, NavigationActions::Next);
-
-        return Keyboard::make([
-            'keyboard' => [$keyboard],
-            'resize_keyboard' => true,
-            'one_time_keyboard' => true,
-        ]);
-    }
-
-    protected function setState(string $q, Google_Service_YouTube_SearchListResponse $response)
-    {
-        $this->setUserState([
-            'query' => $q,
-            'nextToken' => $response->getNextPageToken(),
-            'previousToken' => $response->getPrevPageToken(),
-            'state' => YoutubeSearchStates::Navigation,
-        ]);
-    }
-
-    protected function getPageToken(): ?string
-    {
-        $data = $this->getUserData();
-        if ($data == null || $data['state'] != YoutubeSearchStates::Navigation) {
-            return null;
-        }
-        return Arr::has($data, 'pageToken') ? $data['pageToken'] : null;
+        $this->replyWithMessage(['text' => 'Enter search query']);
+        $this->addUserState(['route' => 'search-youtube']);
     }
 }

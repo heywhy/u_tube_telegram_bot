@@ -30,6 +30,8 @@ class PullCommand extends Command
      */
     public function handle($arguments)
     {
+        $this->replyWithChatAction(['action' => Actions::TYPING]);
+
         $data = $this->getUserData();
         $resolutions = collect(isset($data['video_resolutions']) ? $data['video_resolutions'] : []);
 
@@ -39,6 +41,7 @@ class PullCommand extends Command
         $resolution = $resolutions->first($callback);
 
         if (!is_null($resolution)) {
+            $this->replyWithChatAction(['action' => Actions::UPLOAD_VIDEO]);
             $this->replyWithVideo([
                 'video' => $resolution['url'],
                 'supports_streaming' => true,

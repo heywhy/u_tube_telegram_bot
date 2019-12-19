@@ -2,7 +2,8 @@
 
 namespace App\Support;
 
-use App\Telegram\AnswerQueryCallbackBus;
+use App\Telegram\Commands\NavigationCommand;
+use App\Telegram\Commands\PullCommand;
 use App\Telegram\Commands\RouteCommand;
 use Telegram\Bot\Api;
 use Telegram\Bot\Laravel\Facades\Telegram;
@@ -10,6 +11,12 @@ use Telegram\Bot\Objects\Update;
 
 class App
 {
+
+    protected static $hiddenCommands = [
+        PullCommand::class,
+        RouteCommand::class,
+        NavigationCommand::class
+    ];
 
     /**
      * Process the pending bot chat/commands.
@@ -62,10 +69,16 @@ class App
 
     static protected function processCallbackQuery(Api $telegram, Update $update)
     {
+        $commandBus = $telegram->getCommandBus();
+
+        $commandBus->addCommands(static::$hiddenCommands);
+
         $callbackQuery = $update->getCallbackQuery();
         $data = $callbackQuery->getData();
 
-        $telegram->getCommandBus()->handler($data, $update);
+        $commandBus->handler($data, $update);
+
+        $commandBus->removeCommands(static::$hiddenCommands);
     }
 
     /**
