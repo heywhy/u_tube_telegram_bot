@@ -32,8 +32,8 @@ class NavigationCommand extends Command
     {
         if (NavigationActions::getInstance($arguments)->is(NavigationActions::Cancel())) {
             $this->setUserState(null);
-            $this->triggerCommand('help');
-            return $this->replyWithMessage(['text' => 'Search cancelled',]);
+            $this->replyWithMessage(['text' => 'Search cancelled',]);
+            return $this->triggerCommand('help');
         }
 
         $this->addUserState(['navigation' => $arguments]);
