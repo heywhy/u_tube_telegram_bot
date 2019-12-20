@@ -53,7 +53,7 @@ class RouteCommand extends Command
             if ($callback != null) $callback($this, $arguments);
         } catch (Exception $e) {
             logger()->error($e);
-            $this->replyWithMessage(['text' => 'Unknown command']);
+            $this->replyWithMessage(['text' => 'An error occured, try again in few minutes']);
         }
     }
 }
