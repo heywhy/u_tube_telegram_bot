@@ -61,7 +61,7 @@ class DownloadCommand extends Command
             ]);
         }
 
-        [$service, $url] = preg_split("/\s/", $arguments, 2);
+        [$service, $url] = $this->getDownloadInfo($arguments);
 
         if (!is_null($this->getCallbackQuery())) {
             $this->answerCallbackQuery(['text' => 'Processing...',]);
@@ -77,6 +77,28 @@ class DownloadCommand extends Command
                 ]);
         }
         // $this->telegram->replyKeyboardHide();
+    }
+
+    protected function getDownloadInfo(string $arguments): array
+    {
+        list($service, $url) = preg_split("/\s/", $arguments, 2);
+
+        if (is_null($url) && is_array($info = parse_url($service))) {
+            $url = $service;
+            $service = $this->matchingVideoService($info['host']);
+        }
+
+        return [$service, $url];
+    }
+
+    protected function matchingVideoService(string $host): string
+    {
+        switch (mb_strtolower($host)) {
+            case 'youtu.be':
+                return 'youtube';
+            default:
+                return $host;
+        }
     }
 
     protected function processYoutubeDownload(string $url)
