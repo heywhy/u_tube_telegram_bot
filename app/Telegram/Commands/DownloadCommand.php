@@ -81,7 +81,12 @@ class DownloadCommand extends Command
 
     protected function getDownloadInfo(string $arguments): array
     {
-        list($service, $url) = preg_split("/\s/", $arguments, 2);
+        $service = $url = null;
+        if (count(preg_split("/\s/", $arguments)) > 1) {
+            list($service, $url) = preg_split("/\s/", $arguments, 2);
+        } else {
+            $url = $arguments;
+        }
 
         if (is_null($url) && is_array($info = parse_url($service))) {
             $url = $service;
