@@ -27,7 +27,7 @@ class CommandRoute
     {
         static::initRoutes();
 
-        $route = $param['route'];
+        $route = Arr::get($param, 'route');
         if (!Arr::has(static::$routes, [$route])) {
             throw new Exception('Can\'t find route key "' . $route . '" in telegram routes');
         }
