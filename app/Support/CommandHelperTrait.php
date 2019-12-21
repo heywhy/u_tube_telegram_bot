@@ -94,7 +94,7 @@ trait CommandHelperTrait
      */
     protected function getCallbackQuery(Update $update = null): ?CallbackQuery
     {
-        $update ??= $this->getUpdate();
+        $update = $update ?? $this->getUpdate();
         return $update->getCallbackQuery();
     }
 }
