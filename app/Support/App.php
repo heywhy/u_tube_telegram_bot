@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Telegram\Commands\NavigationCommand;
 use App\Telegram\Commands\PullCommand;
 use App\Telegram\Commands\RouteCommand;
+use Illuminate\Support\Str;
 use Telegram\Bot\Api;
 use Telegram\Bot\Laravel\Facades\Telegram;
 use Telegram\Bot\Objects\Update;
@@ -55,6 +56,10 @@ class App
             return static::processCallbackQuery($telegram, $update);
         }
 
+        if (!is_null($update->getInlineQuery())) {
+            return static::processInlineQuery($telegram, $update);
+        }
+
         $entities = $update->getMessage() != null
             ? $update->getMessage()->getEntities() : null;
 
@@ -79,6 +84,26 @@ class App
         $commandBus->handler($data, $update);
 
         $commandBus->removeCommands(static::$hiddenCommands);
+    }
+
+    static protected function processInlineQuery(Api $telegram, Update $update)
+    {
+        $inlineQuery = $update->getInlineQuery();
+        $query = $inlineQuery->getQuery();
+
+        $telegram->answerInlineQuery([
+            'results' => [
+                [
+                    'type' => 'photo',
+                    'id' => Str::random(30),
+                    'photo_url' => asset('img/ok.jpg'),
+                    'thumb_url' => asset('img/ok.jpg'),
+                ],
+            ],
+            'switch_pm_text' => 'Chat',
+            'inline_query_id' => $inlineQuery->getId(),
+            'switch_pm_parameter' => "download",
+        ]);
     }
 
     /**

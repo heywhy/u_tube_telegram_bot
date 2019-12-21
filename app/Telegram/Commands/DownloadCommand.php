@@ -2,9 +2,11 @@
 
 namespace App\Telegram\Commands;
 
-use App\Services\Video\YoutubeService;
+use App\Enums\VideoPlatform;
+use App\Exceptions\InvalidVideoPlatformException;
 use App\Support\CommandHelperTrait;
 use App\Support\Helper;
+use App\Support\VideoDownloader;
 use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Support\Arr;
 use Telegram\Bot\Actions;
@@ -31,22 +33,23 @@ class DownloadCommand extends Command
     protected $description = 'Download video from the given url';
 
     /**
-     * @var YoutubeService
-     */
-    protected $youtube;
-
-    /**
      * @var Repository
      */
     protected $cacheRepo;
 
     /**
-     * @param  YoutubeService  $youtube
+     * @var VideoDownloader
      */
-    public function __construct(Repository $cacheRepo, YoutubeService $youtube)
+    protected $videoDownloader;
+
+    /**
+     * @param  \Illuminate\Contracts\Cache\Repository  $cacheRepo
+     * @param  \App\Support\VideoDownloader            $videoDownloader
+     */
+    public function __construct(Repository $cacheRepo, VideoDownloader $videoDownloader)
     {
-        $this->youtube = $youtube;
         $this->cacheRepo = $cacheRepo;
+        $this->videoDownloader = $videoDownloader;
     }
 
     /**
@@ -54,61 +57,41 @@ class DownloadCommand extends Command
      */
     public function handle($arguments)
     {
-        $this->replyWithChatAction(['action' => Actions::TYPING]);
-        if (empty($arguments)) {
-            return $this->replyWithMessage([
-                'text' => 'Usage: /download [service](youtube) [url]'
+        try {
+            $supportedPlatforms = implode(', ', VideoPlatform::getValues());
+            $this->replyWithChatAction(['action' => Actions::TYPING]);
+
+            if (empty($arguments)) {
+                $message = <<<MSG
+                Usage: /download [service] [url]
+
+                Supported platforms: $supportedPlatforms
+                MSG;
+                return $this->replyWithMessage([
+                    'text' => $message,
+                ]);
+            }
+
+            [$service, $url] = $this->videoDownloader->getDownloadInfo($arguments);
+
+            $this->answerCallbackQuery(['text' => 'Processing...',]);
+
+            if ($service->is(VideoPlatform::Youtube())) {
+                return $this->processYoutubeDownload($url);
+            }
+            // $this->telegram->replyKeyboardHide();
+        } catch (InvalidVideoPlatformException $e) {
+            $this->replyWithMessage([
+                'text' => 'Unknown video provider e.g. /download (youtube) url',
             ]);
         }
 
-        [$service, $url] = $this->getDownloadInfo($arguments);
-
-        if (!is_null($this->getCallbackQuery())) {
-            $this->answerCallbackQuery(['text' => 'Processing...',]);
-        }
-
-        switch (mb_strtolower($service)) {
-            case 'youtube':
-                $this->processYoutubeDownload($url);
-                break;
-            default:
-                $this->replyWithMessage([
-                    'text' => 'Unknown video provider e.g. /download (youtube) url',
-                ]);
-        }
-        // $this->telegram->replyKeyboardHide();
-    }
-
-    protected function getDownloadInfo(string $arguments): array
-    {
-        $service = $url = null;
-        if (count(preg_split("/\s/", $arguments)) > 1) {
-            list($service, $url) = preg_split("/\s/", $arguments, 2);
-        } else {
-            $service = $arguments;
-        }
-
-        if (is_null($url) && is_array($info = parse_url($service))) {
-            $url = $service;
-            $service = $this->matchingVideoService($info['host']);
-        }
-
-        return [$service, $url];
-    }
-
-    protected function matchingVideoService(string $host): string
-    {
-        switch (mb_strtolower($host)) {
-            case 'youtu.be':
-                return 'youtube';
-            default:
-                return $host;
-        }
     }
 
     protected function processYoutubeDownload(string $url)
     {
-        $resolutions = $this->youtube->getResolutions($url);
+        $resolutions = $this->videoDownloader
+            ->getResolutions(VideoPlatform::Youtube(), $url);
 
         if (empty($resolutions)) {
             return $this->replyWithMessage([
