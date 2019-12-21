@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Exceptions\InvalidVideoPlatformException;
 use App\Telegram\Commands\NavigationCommand;
 use App\Telegram\Commands\PullCommand;
 use App\Telegram\Commands\RouteCommand;
@@ -91,18 +92,38 @@ class App
         $inlineQuery = $update->getInlineQuery();
         $query = $inlineQuery->getQuery();
 
-        $telegram->answerInlineQuery([
-            'results' => [
-                [
-                    'type' => 'photo',
+        /** @var VideoDownloader */
+        $downloader = app(VideoDownloader::class);
+        $results = [];
+        try {
+            [$service, $url] = $downloader->getDownloadInfo($query);
+            $resolutions = Helper::cleanArray($downloader->getResolutions($service, $url) ?? []);
+
+            $results = array_map(function (array $info) {
+                [$media_type] = preg_split("/\s+/", $info['format']);
+
+                return [
+                    'type' => 'video',
                     'id' => Str::random(30),
-                    'photo_url' => asset('img/ok.jpg'),
+                    'video_url' => $info['url'],
+                    'mime_type' => 'video/mp4',
                     'thumb_url' => asset('img/ok.jpg'),
-                ],
-            ],
-            'switch_pm_text' => 'Chat',
+                    'title' => $info['format'],
+                    'video_width' => 50,
+                    'video_height' => 50,
+                ];
+            }, $resolutions);
+        } catch (InvalidVideoPlatformException $e) {
+            $results = [];
+        }
+
+
+        $telegram->answerInlineQuery([
+            'results' => $results,
+            'cache_time' => 300,
+            // 'switch_pm_text' => 'Chat',
+            // 'switch_pm_parameter' => 'download',
             'inline_query_id' => $inlineQuery->getId(),
-            'switch_pm_parameter' => "download",
         ]);
     }
 

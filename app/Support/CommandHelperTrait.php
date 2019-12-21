@@ -17,7 +17,7 @@ trait CommandHelperTrait
      */
     protected function getUserData(): array
     {
-        return $this->getStorage()->get($this->getUserKey());
+        return $this->getStorage()->get($this->getUserKey()) ?? [];
     }
 
     /**

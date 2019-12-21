@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Enums\VideoPlatform;
 use App\Exceptions\InvalidVideoPlatformException;
 use App\Services\Video\YoutubeService;
+use Illuminate\Support\Arr;
 
 class VideoDownloader
 {
@@ -53,7 +54,7 @@ class VideoDownloader
     {
         $url = null;
         $service = $arguments;
-        $args = preg_split("/\s/", $arguments);
+        $args = preg_split("/\s+/", $arguments);
 
         if (count($args) > 1) {
             $service = $args[0];
@@ -61,7 +62,7 @@ class VideoDownloader
             $url = implode(' ', $args);
         }
 
-        if (is_null($url) && is_array($info = parse_url($service))) {
+        if (is_null($url) && is_array($info = parse_url($service)) && Arr::has($info, ['host'])) {
             $url = $service;
             $service = $this->matchingVideoService($info['host']);
         }
@@ -83,6 +84,8 @@ class VideoDownloader
     {
         switch (mb_strtolower($host)) {
             case 'youtu.be':
+            case 'youtube.com':
+            case 'www.youtube.com':
                 return 'youtube';
             default:
                 return $host;
