@@ -5,13 +5,24 @@ namespace App\Support;
 use Exception;
 use Illuminate\Support\Arr;
 use Telegram\Bot\Actions;
-use Telegram\Bot\Api;
 use Telegram\Bot\Commands\Command;
 
 class CommandRoute
 {
+
+    /**
+     * Holds the route definition for actions
+     *
+     * @var array
+     */
     protected static $routes;
 
+    /**
+     * Return a callable from a callable if the route is registered.
+     *
+     * @param  array  $param
+     * @return callable
+     */
     static function fromRoute(array $param): callable
     {
         static::initRoutes();
@@ -41,9 +52,11 @@ class CommandRoute
     }
 
     /**
+     * Load the action routes
      *
+     * @return void
      */
-    protected static function initRoutes()
+    protected static function initRoutes(): void
     {
         if (is_null(static::$routes)) {
             static::$routes = include_once base_path('routes/telegram.php');

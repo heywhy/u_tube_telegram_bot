@@ -44,6 +44,6 @@ class YoutubeService implements VideoProviderSevice
 
     public function getResolutions(string $url)
     {
-        return $this->downloader->getDownloadLinks($url);
+        return $this->downloader->getDownloadLinks($url) ?: [];
     }
 }
