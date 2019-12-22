@@ -5,6 +5,7 @@ namespace App\Telegram\Commands;
 use App\Support\CommandHelperTrait;
 use Telegram\Bot\Actions;
 use Telegram\Bot\Commands\Command;
+use Telegram\Bot\Exceptions\TelegramOtherException;
 
 class PullCommand extends Command
 {
@@ -30,27 +31,40 @@ class PullCommand extends Command
      */
     public function handle($arguments)
     {
-        $this->replyWithChatAction(['action' => Actions::TYPING]);
+        $resolution = null;
+        try {
+            $this->replyWithChatAction(['action' => Actions::TYPING]);
 
-        $data = $this->getUserData();
-        $resolutions = collect(isset($data['video_resolutions']) ? $data['video_resolutions'] : []);
+            $data = $this->getUserData();
+            $resolutions = collect(isset($data['video_resolutions']) ? $data['video_resolutions'] : []);
 
-        $callback = function (array $data) use ($arguments) {
-            return $data['format'] == $arguments;
-        };
-        $resolution = $resolutions->first($callback);
+            $callback = function (array $data) use ($arguments) {
+                return $data['format'] == $arguments;
+            };
+            $resolution = $resolutions->first($callback);
 
-        if (!is_null($resolution)) {
-            $this->replyWithChatAction(['action' => Actions::UPLOAD_VIDEO]);
-            $this->replyWithVideo([
-                'video' => $resolution['url'],
-                'supports_streaming' => true,
-            ]);
-        } else {
-            $this->replyWithMessage([
-                'text' => "Can't download video",
-                'reply_markup' => $this->telegram->replyKeyboardHide(),
-            ]);
+            if (!is_null($resolution)) {
+                $this->replyWithChatAction(['action' => Actions::UPLOAD_VIDEO]);
+                $this->replyWithVideo([
+                    'video' => $resolution['url'],
+                    'supports_streaming' => true,
+                ]);
+            } else {
+                $this->replyWithMessage([
+                    'text' => "Can't download video",
+                    'reply_markup' => $this->telegram->replyKeyboardHide(),
+                ]);
+            }
+        } catch (TelegramOtherException $e) {
+            if ($e->getCode() == 413 && !is_null($resolution)) {
+                $this->replyWithMessage([
+                    'text' => <<<MSG
+                    File to large to be sent you can download at <a href="{$resolution['url']}">link</a>
+                    MSG,
+                    'parse_mode' => 'HTML',
+                ]);
+            }
         }
+
     }
 }
