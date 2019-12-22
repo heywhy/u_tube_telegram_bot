@@ -38,9 +38,9 @@ php artisan poll:bot-updates
 ```
 
 ## Roadmap
-
-[x] YouTube
-[] Twitter (via a bot)
+ 
+ - [x] YouTube
+ - [ ] Twitter (via a bot)
 
 License
 -------
