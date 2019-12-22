@@ -61,11 +61,10 @@ class App
             return static::processInlineQuery($telegram, $update);
         }
 
-        $entities = $update->getMessage() != null
-            ? $update->getMessage()->getEntities() : null;
+        $entities = !is_null($update->getMessage()) ? $update->getMessage()->getEntities() : null;
 
-        if ($update->getMessage() != null && !empty($update->getMessage()->getText())
-            && ($entities == null || $entities->contains('type', '!=', 'bot_command'))) {
+        if (!is_null($update->getMessage()) && !empty($update->getMessage()->getText())
+            && ($entities == null || !$entities->contains('type', '!=', 'bot_command'))) {
             /** @var App\Telegram\Commands\RouteCommand */
             $router = app(RouteCommand::class);
             $arguments = $update->getMessage()->getText();
