@@ -40,7 +40,7 @@ php artisan poll:bot-updates
 ## Roadmap
  
  - [x] YouTube
- - [] Twitter (via a bot)
+ - [ ] Twitter (via a bot)
 
 License
 -------
