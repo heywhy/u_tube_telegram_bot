@@ -60,7 +60,7 @@ class PullCommand extends Command
             if ($e->getCode() == 413 && !is_null($resolution)) {
                 $this->replyWithMessage([
                     'text' => <<<MSG
-                    File to large to be sent you can download at <a href="{$resolution['url']}">link</a>
+                    File too large, you can download at <a href="{$resolution['url']}">link</a>
                     MSG,
                     'parse_mode' => 'HTML',
                 ]);
