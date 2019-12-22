@@ -64,7 +64,7 @@ class App
         $entities = $update->getMessage() != null
             ? $update->getMessage()->getEntities() : null;
 
-        if ($update->getMessage() != null
+        if ($update->getMessage() != null && !empty($update->getMessage()->getText())
             && ($entities == null || $entities->contains('type', '!=', 'bot_command'))) {
             /** @var App\Telegram\Commands\RouteCommand */
             $router = app(RouteCommand::class);
