@@ -6,6 +6,7 @@ use App\Support\CommandHelperTrait;
 use Telegram\Bot\Actions;
 use Telegram\Bot\Commands\Command;
 use Telegram\Bot\Exceptions\TelegramOtherException;
+use Telegram\Bot\Exceptions\TelegramResponseException;
 
 class PullCommand extends Command
 {
@@ -55,7 +56,7 @@ class PullCommand extends Command
                     'reply_markup' => $this->telegram->replyKeyboardHide(),
                 ]);
             }
-        } catch (TelegramOtherException $e) {
+        } catch (TelegramOtherException|TelegramResponseException $e) {
             if ($e->getCode() == 413 && !is_null($resolution)) {
                 $this->replyWithMessage([
                     'text' => <<<MSG

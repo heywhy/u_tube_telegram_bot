@@ -58,7 +58,7 @@ class SearchYoutubeAction extends Action
             $this->replyWithMessage([
                 'text' => $text,
                 'parse_mode' => 'HTML',
-                'reply_markup' => $this->watchButton($item),
+                'reply_markup' => $this->inlineButtons($item),
             ]);
         }
 
@@ -74,7 +74,7 @@ class SearchYoutubeAction extends Action
         return "https://youtube.com/watch?v={$item->id->videoId}";
     }
 
-    protected function watchButton(Google_Service_YouTube_SearchResult $item)
+    protected function inlineButtons(Google_Service_YouTube_SearchResult $item)
     {
         $watchUrl = $this->watchUrl($item);
         return Keyboard::make([
@@ -89,11 +89,13 @@ class SearchYoutubeAction extends Action
     {
         $data = $this->getUserData();
         $keyboard = [];
-        if (Arr::has($data, 'previousToken') && $data['previousToken'] != null)
+        if (!is_null(Arr::get($data, 'previousToken'))) {
             $keyboard[] = ['text' => 'Previous', 'callback_data' => '/navigate ' . NavigationActions::Previous];
+        }
         $keyboard[] = ['text' => 'Cancel', 'callback_data' => '/navigate ' . NavigationActions::Cancel];
-        if (Arr::has($data, 'nextToken') && $data['nextToken'] != null)
+        if (!is_null(Arr::get($data, 'nextToken'))) {
             $keyboard[] = ['text' => 'Next', 'callback_data' => '/navigate ' . NavigationActions::Next];
+        }
 
         return Keyboard::make([
             'inline_keyboard' => [$keyboard],
