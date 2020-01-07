@@ -43,8 +43,8 @@ class DownloadAction extends Action
      */
     public function call($argument)
     {
+        $supportedPlatforms = implode(', ', VideoPlatform::getValues());
         try {
-            $supportedPlatforms = implode(', ', VideoPlatform::getValues());
             $this->replyWithChatAction(['action' => Actions::TYPING]);
 
             if (empty($argument)) {
@@ -66,7 +66,7 @@ class DownloadAction extends Action
             // $this->telegram->replyKeyboardHide();
         } catch (InvalidVideoPlatformException $e) {
             $this->replyWithMessage([
-                'text' => 'Unknown video provider e.g. /download (youtube) url',
+                'text' => 'Supported video providers are/is ' . $supportedPlatforms,
             ]);
         }
 
