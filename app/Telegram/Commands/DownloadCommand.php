@@ -36,7 +36,7 @@ class DownloadCommand extends Command
         ]);
 
         $this->addUserState(['route' => 'download']);
-        if (is_null($arguments)) {
+        if (empty($arguments)) {
             $this->replyWithMessage(['text' => 'Enter video url']);
         } else {
             /** @var \App\Telegram\Commands\RouteCommand */
