@@ -28,7 +28,7 @@ class App
      */
     static function process($process = true): string
     {
-        /** @var \Telegram\Bot\Objects\Update  $update */
+        /** @var \Telegram\Bot\Objects\Update */
         $update = Telegram::commandsHandler($process);
 
         if (is_array($update)) {
